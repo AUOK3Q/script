@@ -1,0 +1,28 @@
+#/bin/bash
+groupadd clamav
+useradd -g clamav clamav -s /sbin/nologin
+mkdir -p /usr/local/clamav
+mkdir /usr/local/clamav/{logs,update,socket}
+touch /usr/local/clamav/logs/{clamd.log,fresclam.log}
+chown -R clamav:clamav /usr/local/clamav
+
+rpm -ivh --prefix=/usr/local/clamav ~/clamav-1.0.1.linux.x86_64.rpm
+
+cp /usr/local/clamav/etc/clamd.conf.sample /usr/local/clamav/etc/clamd.conf
+cp /usr/local/clamav/etc/freshclam.conf.sample /usr/local/clamav/etc/freshclam.conf
+sed -i "/Example/ s/^/#/g" /usr/local/clamav/etc/clamd.conf
+sed -i "/Example/ s/^/#/g" /usr/local/clamav/etc/freshclam.conf
+
+cat>> /usr/local/clamav/etc/freshclam.conf<<EOF
+DatabaseDirectory /usr/local/clamav/update
+UpdateLogFile /usr/local/clamav/logs/freshclam.log
+PidFile /usr/local/clamav/update/freshclam.pid
+EOF
+cat>> /usr/local/clamav/etc/clamd.conf <<EOF
+LogFile /usr/local/clamav/logs/clamd.log
+PidFile /usr/local/clamav/update/clamd.pid
+DatabaseDirectory /usr/local/clamav/update
+LocalSocket /usr/local/clamav/socket/clamd.socket
+EOF
+ln -s /usr/local/clamav/bin/clamscan /usr/bin/clamscan
+ln -s /usr/local/clamav/bin/freshclam /usr/bin/freshclam
