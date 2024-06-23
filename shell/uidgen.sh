@@ -8,14 +8,15 @@ function mimvp_uid_num() {
   num=$(head -n 20 /dev/urandom | cksum | cut -f1 -d ' ')
   randnum=$(($num%$mid+$min))    
  
-  # 排除1000, 60000可以任意添加
-  port_exclude='1000,60000'
-  flag=`echo ${port_exclude} | grep ${randnum} | wc -l`
+  # 排除已使用数字后随机添加
+  used_id=`awk -F: '{print $3}' /etc/passwd |sed ":a;N;s/\n/,/g;ta"`
+  num_exclude='$used_id'
+  flag=`echo ${num_exclude} | grep ${randnum} | wc -l`
   while [ "$flag" -eq "1" ]
   do
     num=$(head -n 20 /dev/urandom | cksum | cut -f1 -d ' ')
     randnum=$(($num%$mid+$min))    
-    flag=`echo ${port_exclude} | grep ${randnum} | wc -l`
+    flag=`echo ${num_exclude} | grep ${randnum} | wc -l`
   done
   echo $randnum
 }
