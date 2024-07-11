@@ -435,6 +435,32 @@ echo ""
 	echo ""
 }
 
+Service_add()
+{
+	if [ !f /etc/systemd/system/sshd.serrvice ];then
+	echo "SSH服务已创建"
+	else
+	touch /etc/systemd/system/sshd.serrvice
+	cat >> /etc/systemd/system/sshd.serrvice <<EOF
+	[Unit]
+Description=OpenSSH server daemon
+Documentation=man:sshd(8) man:sshd_config(5)
+After=network.target sshd-keygen.service
+Wants=sshd-keygen.service
+
+[Service]
+Type=notify
+EnvironmentFile=/etc/ssh/sshd_config
+ExecStart=/usr/sbin/sshd -D $OPTIONS
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=process
+Restart=on-failure
+RestartSec=42s
+
+[Install]
+WantedBy=multi-user.target
+EOF
+}
 End_install()
 {
 
@@ -474,4 +500,5 @@ Install_tar
 Install_zlib
 Install_openssl
 Install_openssh
+Service_add
 End_install
